@@ -11,6 +11,13 @@ namespace CodeCraft.DependencyInjection
         private IDictionary<NamedInterfaces, Type> Contracts = new Dictionary<NamedInterfaces, Type>();
         private IDictionary<NamedInterfaces, object> Instances = new Dictionary<NamedInterfaces, object>();
 
+         public void RegisterType<Interface, Implementation>()
+            where Interface : class
+            where Implementation : class
+        {
+            RegisterType<Interface, Implementation>("default");
+        }
+
         public void RegisterType<Interface, Implementation>(string name)
             where Interface : class
             where Implementation : class
@@ -24,8 +31,10 @@ namespace CodeCraft.DependencyInjection
 
             Contracts[namedInterface] = typeof(Implementation);
         }
+        public T Resolve<T>() =>  Resolve<T>("default");
 
         public T Resolve<T>(string name) => (T)Resolve(typeof(T), name);
+
         private object Resolve(Type contract, string name)
         {
             var namedInterface = new NamedInterfaces()
