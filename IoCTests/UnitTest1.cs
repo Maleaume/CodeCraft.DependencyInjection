@@ -37,7 +37,7 @@ namespace IoCTests
         public void TestMethod1()
         {
             IoC container = IoC.Instance;
-          
+
             container.RegisterType<ITest, ATest>("A");
             container.RegisterType<ITest, BTest>("B");
             container.RegisterType<IMain, Main>("A");
@@ -55,6 +55,40 @@ namespace IoCTests
             IMain bMain = container.Resolve<IMain>("B");
             Assert.IsNotNull(bMain);
             Assert.AreEqual("BTest Instances", bMain.ToString());
+        }
+
+
+        public  class Unit<T> : IUnit<T>
+        {
+            public override string ToString() => typeof(T).ToString();
+        }
+        public class DUnit : Unit<ATest>
+        {
+            public override string ToString() => "Dunit";
+        }
+
+        public class IntUnit : Unit<BTest>
+        {
+        }
+
+        public interface IUnit<T>
+        {
+            string ToString();
+        }
+
+        [TestMethod]
+        public void TestMethod()
+        {
+            IoC container = IoC.Instance;
+
+            container.RegisterType<IUnit<int>, Unit<int>>("B");
+            container.RegisterType<IUnit<ATest>, DUnit>("A");
+            
+
+            IUnit<ATest> dUnit = container.Resolve<IUnit<ATest>>("A");
+            Assert.IsNotNull(dUnit);
+
+            Assert.AreEqual("Dunit",  dUnit.ToString());
         }
     }
 }
