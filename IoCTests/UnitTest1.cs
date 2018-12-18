@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CodeCraft.DependencyInjection;
 
 namespace IoCTests
@@ -36,7 +35,7 @@ namespace IoCTests
         [TestMethod]
         public void TestMethod1()
         {
-            IoC container = IoC.Instance;
+            var container = IoC.Instance;
 
             container.RegisterType<ITest, ATest>("A");
             container.RegisterType<ITest, BTest>("B");
@@ -49,10 +48,10 @@ namespace IoCTests
             Assert.IsNotNull(Bimpl);
             Assert.AreEqual("BTest Instances", Bimpl.TestString());
 
-            IMain aMain = container.Resolve<IMain>("A");
+            var aMain = container.Resolve<IMain>("A");
             Assert.IsNotNull(aMain);
             Assert.AreEqual("ATest Instances", aMain.ToString());
-            IMain bMain = container.Resolve<IMain>("B");
+            var bMain = container.Resolve<IMain>("B");
             Assert.IsNotNull(bMain);
             Assert.AreEqual("BTest Instances", bMain.ToString());
         }
@@ -79,13 +78,13 @@ namespace IoCTests
         [TestMethod]
         public void TestMethod()
         {
-            IoC container = IoC.Instance;
+            var container = IoC.Instance;
 
             container.RegisterType<IUnit<int>, Unit<int>>("B");
             container.RegisterType<IUnit<ATest>, DUnit>("A");
-            
 
-            IUnit<ATest> dUnit = container.Resolve<IUnit<ATest>>("A");
+
+            var dUnit = container.Resolve<IUnit<ATest>>("A");
             Assert.IsNotNull(dUnit);
 
             Assert.AreEqual("Dunit",  dUnit.ToString());

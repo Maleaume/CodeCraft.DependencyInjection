@@ -14,7 +14,7 @@ namespace CodeCraft.DependencyInjection
          => IsRegister<Interface>("default");
 
         public bool IsRegister<Interface>(string name)
-            => IsRegister(new NamedInterfaces()
+            => IsRegister(new NamedInterfaces
             {
                 InterfaceType = typeof(Interface),
                 Name = name
@@ -36,7 +36,7 @@ namespace CodeCraft.DependencyInjection
         {
             if (!CheckConsistency<Interface, Implementation>()) throw new TypeAccessException();
 
-            var namedInterface = new NamedInterfaces()
+            var namedInterface = new NamedInterfaces
             {
                 InterfaceType = typeof(Interface),
                 Name = name
@@ -47,8 +47,8 @@ namespace CodeCraft.DependencyInjection
 
         bool CheckConsistency<Interface, Implementation>()
         {
-            Type interfaceType = typeof(Interface);
-            Type implementationType = typeof(Implementation);
+            var interfaceType = typeof(Interface);
+            var implementationType = typeof(Implementation);
             if (!interfaceType.IsInterface) throw new TypeAccessException();
             if (implementationType.IsAbstract) throw new TypeAccessException();
             return interfaceType.Equals(implementationType.GetInterface(interfaceType.Name));
@@ -56,11 +56,12 @@ namespace CodeCraft.DependencyInjection
 
         public T Resolve<T>() => Resolve<T>("default");
 
+
         public T Resolve<T>(string name) => (T)Resolve(typeof(T), name);
 
         private object Resolve(Type contract, string name)
         {
-            var namedInterface = new NamedInterfaces()
+            var namedInterface = new NamedInterfaces
             {
                 InterfaceType = contract,
                 Name = name
@@ -68,15 +69,15 @@ namespace CodeCraft.DependencyInjection
 
             if (!Implementations.ContainsKey(namedInterface))
             {
-                Type implementation = Contracts[namedInterface];
+                var implementation = Contracts[namedInterface];
                 var constructor = implementation.GetConstructors()[0];
                 ParameterInfo[] constructorParameters = constructor.GetParameters();
                 if (constructorParameters.Length == 0)
                     Implementations[namedInterface] = Activator.CreateInstance(implementation);
                 else
                 {
-                    List<object> parameters = new List<object>(constructorParameters.Length);
-                    foreach (ParameterInfo parameterInfo in constructorParameters)
+                    var parameters = new List<object>(constructorParameters.Length);
+                    foreach (var parameterInfo in constructorParameters)
                     {
                         parameters.Add(Resolve(parameterInfo.ParameterType, name));
                     }
@@ -85,6 +86,34 @@ namespace CodeCraft.DependencyInjection
                 }
             }
             return Implementations[namedInterface];
+        }
+
+        public T ResolveNewInstance<T>(string name) => (T)ResolveNewInstance(typeof(T), name);
+
+        private object ResolveNewInstance(Type contract, string name)
+        {
+            var namedInterface = new NamedInterfaces
+            {
+                InterfaceType = contract,
+                Name = name
+            };
+
+            object instance;
+            var implementation = Contracts[namedInterface];
+            var constructor = implementation.GetConstructors()[0];
+            ParameterInfo[] constructorParameters = constructor.GetParameters();
+            if (constructorParameters.Length == 0)
+                instance = Activator.CreateInstance(implementation);
+            else
+            {
+                var parameters = new List<object>(constructorParameters.Length);
+                foreach (var parameterInfo in constructorParameters)
+                {
+                    parameters.Add(ResolveNewInstance(parameterInfo.ParameterType, name));
+                }
+                instance = constructor.Invoke(parameters.ToArray());
+            }
+            return instance;
         }
     }
 }
