@@ -4,7 +4,7 @@ using CodeCraft.DependencyInjection;
 namespace IoCTests
 {
     [TestClass]
-    public class UnitTest1
+    public class SimpleIoCRetrieves
     {
         public interface ITest
         {
@@ -32,6 +32,7 @@ namespace IoCTests
         }
         public interface IMain
         { }
+
         [TestMethod]
         public void TestMethod1()
         {
