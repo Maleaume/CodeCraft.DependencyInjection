@@ -55,8 +55,7 @@ namespace CodeCraft.DependencyInjection
         }
 
         public T Resolve<T>() => Resolve<T>("default");
-
-
+        
         public T Resolve<T>(string name) => (T)Resolve(typeof(T), name);
 
         private object Resolve(Type contract, string name)
