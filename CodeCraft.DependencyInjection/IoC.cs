@@ -26,13 +26,13 @@ namespace CodeCraft.DependencyInjection
             if (oldLazyInstance.IsValueCreated && oldLazyInstance.Value is IDisposable objDisposable)
                 objDisposable.Dispose();
         }
-
     }
 
 
     public class IoC : Singleton<IoC>
     {
-      private readonly IoCDictionary LazyImplementations = new IoCDictionary();
+       
+        private readonly IoCDictionary LazyImplementations = new IoCDictionary();
 
         /* public bool IsRegister<Interface>() => IsRegister<Interface>("default");
 
@@ -57,11 +57,11 @@ namespace CodeCraft.DependencyInjection
             };
 
 
-
         public void RegisterType<Interface, Implementation>()
            where Interface : class
            where Implementation : class
         {
+            
             RegisterType<Interface, Implementation>("default");
         }
 
@@ -71,13 +71,13 @@ namespace CodeCraft.DependencyInjection
         {
             if (!CheckConsistency<Interface, Implementation>()) throw new TypeAccessException();
 
-            var registerKey = GenerateRegisterKey<Interface>(name);
-            var implementationType = typeof(Implementation);
-            var lazyInstance = new Lazy<object>(() => Instanciate<Interface>(name));
-
-            LazyImplementations[registerKey] = (implementationType, lazyInstance);
+            var registerKey = GenerateRegisterKey<Interface>(name);  
+            LazyImplementations[registerKey] = (typeof(Implementation), CreateLazyInstance<Interface>(name));
         }
-         
+
+        private Lazy<object> CreateLazyInstance<Interface>(string name)
+            => new Lazy<object>(() => Instanciate<Interface>(name));
+
         bool CheckConsistency<Interface, Implementation>()
         {
             if (!IsInterface<Interface>()) throw new TypeAccessException();
@@ -143,7 +143,7 @@ namespace CodeCraft.DependencyInjection
 
             foreach (var kp in t)
             {
-                var registerParamKey = GenerateRegisterKey(kp.Field.FieldType,   kp.InjectionAttribute.Name);
+                var registerParamKey = GenerateRegisterKey(kp.Field.FieldType, kp.InjectionAttribute.Name);
                 var value = Resolve(registerParamKey);
                 kp.Field.SetValue(instance, value);
             }
@@ -155,7 +155,7 @@ namespace CodeCraft.DependencyInjection
         {
             if (Equals(implementation, default(Interface))) throw new ArgumentNullException("implementation", "Implementation cannot be null");
             var registerKey = GenerateRegisterKey<Interface>(name);
-            LazyImplementations[registerKey] = ( implementation.GetType(), new Lazy<object>(() => implementation));
+            LazyImplementations[registerKey] = (implementation.GetType(), new Lazy<object>(() => implementation));
         }
     }
 }
