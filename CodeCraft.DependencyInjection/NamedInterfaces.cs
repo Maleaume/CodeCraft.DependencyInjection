@@ -4,6 +4,10 @@ namespace CodeCraft.DependencyInjection
 {
     public struct NamedInterfaces
     {
+        /// <summary>
+        /// is not use for HashCode.
+        /// </summary>
+        public Type ImplementationType { get; set; }
         public Type InterfaceType { get; set; }
         public string Name { get; set; }
 
@@ -11,10 +15,11 @@ namespace CodeCraft.DependencyInjection
         {
             if (obj == null || !(obj is NamedInterfaces typedObj))
                 return false;
-            return typedObj.InterfaceType.Equals(InterfaceType) &&
+            return typedObj.InterfaceType.Equals(InterfaceType) && 
                    typedObj.Name.Equals(Name);
         }
 
-        public override int GetHashCode() => Name.GetHashCode() ^ InterfaceType.GetHashCode();
+        public override int GetHashCode() =>
+            Name.GetHashCode() ^ InterfaceType.GetHashCode();
     }
 }
