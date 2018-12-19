@@ -8,18 +8,26 @@ namespace CodeCraft.DependencyInjection
 {
     public class IoC : Singleton<IoC>
     {
-        private IDictionary<NamedInterfaces, Type> Contracts = new Dictionary<NamedInterfaces, Type>();
-        private IDictionary<NamedInterfaces, object> Implementations = new Dictionary<NamedInterfaces, object>();
+        private readonly IDictionary<NamedInterfaces, Type> Contracts = new Dictionary<NamedInterfaces, Type>();
+        private readonly IDictionary<NamedInterfaces, Lazy<object>> LazyImplementations = new Dictionary<NamedInterfaces, Lazy<object>>();
 
-        public bool IsRegister<Interface>()
-         => IsRegister<Interface>("default");
+        public bool IsRegister<Interface>() => IsRegister<Interface>("default");
 
         public bool IsRegister<Interface>(string name)
-            => IsRegister(new NamedInterfaces
+        {
+            var registerKey = GenerateRegisterKey<Interface>(name);
+            return IsRegister(registerKey);
+        }
+
+        private NamedInterfaces GenerateRegisterKey<Interface>(string name)
+            => GenerateRegisterKey(typeof(Interface), name);
+
+        private NamedInterfaces GenerateRegisterKey(Type interfaceType, string name)
+            => new NamedInterfaces
             {
-                InterfaceType = typeof(Interface),
+                InterfaceType = interfaceType,
                 Name = name
-            });
+            };
 
         private bool IsRegister(NamedInterfaces key)
          => Contracts.ContainsKey(key);
@@ -37,71 +45,47 @@ namespace CodeCraft.DependencyInjection
         {
             if (!CheckConsistency<Interface, Implementation>()) throw new TypeAccessException();
 
-            var namedInterface = new NamedInterfaces
-            {
-                InterfaceType = typeof(Interface),
-                Name = name
-            };
-            if (!Contracts.ContainsKey(namedInterface))
-                Contracts[namedInterface] = typeof(Implementation);
+            var registerKey = GenerateRegisterKey<Interface>(name);
+            Contracts[registerKey] = typeof(Implementation);
+            LazyImplementations[registerKey] = new Lazy<object>(() => Instanciate<Interface>(name));
         }
 
         bool CheckConsistency<Interface, Implementation>()
         {
+            if (!IsInterface<Interface>()) throw new TypeAccessException();
+            if (IsAbstract<Implementation>()) throw new TypeAccessException();
+            return IsImplementedBy<Interface, Implementation>();
+        }
+
+
+        bool IsInterface<Interface>() => typeof(Interface).IsInterface;
+        bool IsAbstract<Implementation>() => typeof(Implementation).IsAbstract;
+        bool IsImplementedBy<Interface, Implementation>()
+        {
             var interfaceType = typeof(Interface);
             var implementationType = typeof(Implementation);
-            if (!interfaceType.IsInterface) throw new TypeAccessException();
-            if (implementationType.IsAbstract) throw new TypeAccessException();
             return interfaceType.Equals(implementationType.GetInterface(interfaceType.Name));
         }
 
         public T Resolve<T>() => Resolve<T>("default");
-        
+
         public T Resolve<T>(string name) => (T)Resolve(typeof(T), name);
 
         private object Resolve(Type contract, string name)
         {
-            var namedInterface = new NamedInterfaces
-            {
-                InterfaceType = contract,
-                Name = name
-            };
+            var registerKey = GenerateRegisterKey(contract, name);
+            return LazyImplementations[registerKey].Value;
 
-            if (!Implementations.ContainsKey(namedInterface))
-            {
-                var implementation = Contracts[namedInterface];
-                var constructor = implementation.GetConstructors()[0];
-                ParameterInfo[] constructorParameters = constructor.GetParameters();
-                if (constructorParameters.Length == 0)
-                    Implementations[namedInterface] = Activator.CreateInstance(implementation);
-                else
-                {
-                    var parameters = new List<object>(constructorParameters.Length);
-                    foreach (var parameterInfo in constructorParameters)
-                    {   
-                        parameters.Add(Resolve(parameterInfo.ParameterType, name));
-                    }
-
-                    Implementations[namedInterface] = constructor.Invoke(parameters.ToArray());
-                }
-
-
-            }
-            return Implementations[namedInterface];
         }
 
-        public T ResolveNewInstance<T>(string name) => (T)ResolveNewInstance(typeof(T), name);
 
-        private object ResolveNewInstance(Type contract, string name)
+        private T Instanciate<T>(string name) => (T)Instanciate(typeof(T), name);
+
+        private object Instanciate(Type contract, string name)
         {
-            var namedInterface = new NamedInterfaces
-            {
-                InterfaceType = contract,
-                Name = name
-            };
-
+            var registerKey = GenerateRegisterKey(contract, name);
             object instance;
-            var implementation = Contracts[namedInterface];
+            var implementation = Contracts[registerKey];
             var constructor = implementation.GetConstructors()[0];
             ParameterInfo[] constructorParameters = constructor.GetParameters();
             if (constructorParameters.Length == 0)
@@ -115,9 +99,25 @@ namespace CodeCraft.DependencyInjection
                 }
                 instance = constructor.Invoke(parameters.ToArray());
             }
+
+            // Dependencies By Injection.
+
+            return instance;
+        }
+
+
+        public T ResolveNewInstance<T>(string name) => (T)ResolveNewInstance(typeof(T), name);
+
+        private object ResolveNewInstance(Type contract, string name)
+        {
+            var registerKey = GenerateRegisterKey(contract, name);
+            var implementation = Contracts[registerKey];
+
+            object instance = Instanciate(contract, name);
+
             /////////////////////////////////////
-        
-            var t = implementation.GetFields( BindingFlags.NonPublic | BindingFlags.Instance)
+
+            var t = implementation.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
                 .Select(field => new
                 {
                     Field = field,
@@ -127,15 +127,22 @@ namespace CodeCraft.DependencyInjection
 
             foreach (var kp in t)
             {
-                var value = Resolve(kp.Field.FieldType, kp.InjectionAttribute.Name); 
+                var value = Resolve(kp.Field.FieldType, kp.InjectionAttribute.Name);
                 kp.Field.SetValue(instance, value);
 
             }
             /////////////////////
-
-
-
+             
             return instance;
         }
+
+
+        public void RegisterInstance<Interface>(Interface implementation, string name)
+        {
+            if (Equals(implementation, default(Interface))) throw new ArgumentNullException("implementation", "Implementation cannot be null");
+            var registerKey = GenerateRegisterKey<Interface>(name);
+            LazyImplementations[registerKey] = new Lazy<object>(() => implementation);
+        }
+
     }
 }

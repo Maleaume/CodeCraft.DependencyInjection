@@ -2,7 +2,7 @@
 
 namespace CodeCraft.DependencyInjection
 {
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
     public class FieldInjectionAttribute : Attribute
     {
         public string Name { get; }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CodeCraft.DependencyInjection;
+using System;
 
 namespace IoCTests
 {
@@ -8,16 +9,19 @@ namespace IoCTests
     {
         public interface ITest
         {
+            int Counter { get; set; }
             string TestString();
         }
 
         public class ATest : ITest
         {
+            public int Counter { get; set; } = 0;
             public string TestString() => "ATest Instances";
         }
 
         public class BTest : ITest
         {
+            public int Counter { get; set; } = 0;
             public string TestString() => "BTest Instances";
         }
 
@@ -32,6 +36,51 @@ namespace IoCTests
         }
         public interface IMain
         { }
+        [TestMethod]
+        public void ResolveDifferentInstance()
+        {
+            var container = IoC.Instance;
+            container.RegisterType<ITest, ATest>("A"); 
+            var A1 = container.ResolveNewInstance<ITest>("A");
+            A1.Counter++;
+            var A2 = container.ResolveNewInstance<ITest>("A");
+            Assert.AreNotEqual(A1.Counter, A2.Counter);
+            Assert.AreNotSame(A2, A1);
+        }
+
+        [TestMethod]
+        public void ResolveSameInstance()
+        {
+            var container = IoC.Instance;
+            container.RegisterType<ITest, ATest>("A");  
+            var A1 = container.Resolve<ITest>("A");
+            A1.Counter++;
+            var A2 = container.Resolve<ITest>("A");
+            Assert.AreEqual(A1.Counter, A2.Counter);
+            Assert.AreSame(A2, A1);
+        }
+
+        [TestMethod]
+        [TestCategory("Register Instance")]
+        public void SimpleCase_CreateRegisterRetrieve()
+        {
+            var A = new ATest { Counter = 2 };
+            IoC.Instance.RegisterInstance<ITest>(A, "A");
+            A.Counter++;
+
+            var A1 = IoC.Instance.Resolve<ITest>("A");
+            Assert.AreSame(A1, A); 
+        }
+
+        [TestMethod]
+        [TestCategory("Register Instance")]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void SimpleCase_TryRegisterNullInstance()
+        {
+            IoC.Instance.RegisterInstance<ITest>(null, "A");
+        }
+
+
 
         [TestMethod]
         public void TestMethod1()

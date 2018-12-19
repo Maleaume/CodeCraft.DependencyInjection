@@ -30,6 +30,12 @@ namespace IoCTests
             {
               
             }
+
+            public void Toto([FieldInjection] ITest tester)
+            {
+
+            }
+        
             public override string ToString() => Tester.TestString();
         }
         public interface IMain
