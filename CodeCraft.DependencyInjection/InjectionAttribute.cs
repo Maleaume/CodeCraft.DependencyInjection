@@ -2,9 +2,13 @@
 
 namespace CodeCraft.DependencyInjection
 {
-
-    public class InjectionAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+    public class FieldInjectionAttribute : Attribute
     {
+        public string Name { get; }
+
+        public FieldInjectionAttribute(string name = "")
+            => Name = name;
     }
 
     public class SingletonInectionAttribute : Attribute { }

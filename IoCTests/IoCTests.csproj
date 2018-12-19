@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="SimpleIoCRetrieves.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="IocAttributes.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

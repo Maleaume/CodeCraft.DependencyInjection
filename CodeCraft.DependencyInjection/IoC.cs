@@ -1,6 +1,7 @@
 ﻿using CodeCraft.Core.BaseArchitecture;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace CodeCraft.DependencyInjection
@@ -77,12 +78,14 @@ namespace CodeCraft.DependencyInjection
                 {
                     var parameters = new List<object>(constructorParameters.Length);
                     foreach (var parameterInfo in constructorParameters)
-                    {
+                    {   
                         parameters.Add(Resolve(parameterInfo.ParameterType, name));
                     }
 
                     Implementations[namedInterface] = constructor.Invoke(parameters.ToArray());
                 }
+
+
             }
             return Implementations[namedInterface];
         }
@@ -112,6 +115,26 @@ namespace CodeCraft.DependencyInjection
                 }
                 instance = constructor.Invoke(parameters.ToArray());
             }
+            /////////////////////////////////////
+        
+            var t = implementation.GetFields( BindingFlags.NonPublic | BindingFlags.Instance)
+                .Select(field => new
+                {
+                    Field = field,
+                    InjectionAttribute = field.GetCustomAttribute<FieldInjectionAttribute>()
+                })
+                .Where(x => x.InjectionAttribute != null);
+
+            foreach (var kp in t)
+            {
+                var value = Resolve(kp.Field.FieldType, kp.InjectionAttribute.Name); 
+                kp.Field.SetValue(instance, value);
+
+            }
+            /////////////////////
+
+
+
             return instance;
         }
     }
