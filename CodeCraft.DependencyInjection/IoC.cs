@@ -1,6 +1,5 @@
 ﻿using CodeCraft.Core.BaseArchitecture;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -8,32 +7,10 @@ using System.Reflection;
 namespace CodeCraft.DependencyInjection
 {
 
-    public class IoCDictionary : ConcurrentDictionary<NamedInterfaces, (Type, Lazy<object>)>
-    {
-        public new(Type ImplementationType, Lazy<object> LazyInstance) this[NamedInterfaces key]
-        {
-            get { return base[key]; }
-            set
-            {
-                if (ContainsKey(key))
-                    DisposableRemove(key);
-                base[key] = value;
-            }
-        }
-
-        private void DisposableRemove(NamedInterfaces key)
-        {
-            (_, var oldLazyInstance) = this[key];
-            if (oldLazyInstance.IsValueCreated && oldLazyInstance.Value is IDisposable objDisposable)
-                objDisposable.Dispose();
-        }
-    }
-
-
     public class IoC : Singleton<IoC>
     {
-       
-        private readonly IoCDictionary LazyImplementations = new IoCDictionary();
+        private readonly IConsistencyValidator ConcistencyValidator = new ConsistencyValidator();
+        private readonly IoCContainer LazyImplementations = new IoCContainer();
 
         /* public bool IsRegister<Interface>() => IsRegister<Interface>("default");
 
@@ -57,12 +34,13 @@ namespace CodeCraft.DependencyInjection
                 Name = name
             };
 
+       
 
         public void RegisterType<Interface, Implementation>()
            where Interface : class
            where Implementation : class
         {
-            
+
             RegisterType<Interface, Implementation>("default");
         }
 
@@ -70,30 +48,14 @@ namespace CodeCraft.DependencyInjection
             where Interface : class
             where Implementation : class
         {
-            if (!CheckConsistency<Interface, Implementation>()) throw new TypeAccessException();
+            if (!ConcistencyValidator.CheckConsistency<Interface, Implementation>()) throw new TypeAccessException();
 
-            var registerKey = GenerateRegisterKey<Interface>(name);  
+            var registerKey = GenerateRegisterKey<Interface>(name);
             LazyImplementations[registerKey] = (typeof(Implementation), CreateLazyInstance<Interface>(name));
         }
 
         private Lazy<object> CreateLazyInstance<Interface>(string name)
             => new Lazy<object>(() => Instanciate<Interface>(name));
-
-        bool CheckConsistency<Interface, Implementation>()
-        {
-            if (!IsInterface<Interface>()) throw new TypeAccessException();
-            if (IsAbstract<Implementation>()) throw new TypeAccessException();
-            return IsImplementedBy<Interface, Implementation>();
-        }
-
-        bool IsInterface<Interface>() => typeof(Interface).IsInterface;
-        bool IsAbstract<Implementation>() => typeof(Implementation).IsAbstract;
-        bool IsImplementedBy<Interface, Implementation>()
-        {
-            var interfaceType = typeof(Interface);
-            var implementationType = typeof(Implementation);
-            return interfaceType.Equals(implementationType.GetInterface(interfaceType.Name));
-        }
 
         public T Resolve<T>() => Resolve<T>("default");
 
@@ -105,43 +67,24 @@ namespace CodeCraft.DependencyInjection
 
         private object Instanciate(NamedInterfaces registerKey)
         {
+           
             object instance;
             var implementation = LazyImplementations[registerKey].ImplementationType;
             var constructor = implementation.GetConstructors()[0];
-            var defaultConstructor = implementation.GetConstructor(Type.EmptyTypes);
-            instance =  Activator.CreateInstance(implementation);
-            /* ParameterInfo[] constructorParameters = constructor.GetParameters();
-             if (constructorParameters.Length == 0)
-                 instance = Activator.CreateInstance(implementation);
-             else
-             {
-                 var parameters = new List<object>(constructorParameters.Length);
-                 foreach (var parameterInfo in constructorParameters)
-                 {
-                     var registerParamKey = GenerateRegisterKey(parameterInfo.ParameterType, registerKey.Name);
-                     parameters.Add(ResolveNewInstance(registerParamKey));
-                 }
-                 instance = constructor.Invoke(parameters.ToArray());
-             }
-             // Dependencies By Injection. */
-
-            ///////////////////////////////////// 
-            var t = implementation.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
-                .Select(field => new
-                {
-                    Field = field,
-                    InjectionAttribute = field.GetCustomAttribute<FieldInjectionAttribute>()
-                })
-                .Where(x => x.InjectionAttribute != null);
-
-            foreach (var kp in t)
+            ParameterInfo[] constructorParameters = constructor.GetParameters();
+            if (constructorParameters.Length == 0)
+                instance = Activator.CreateInstance(implementation);
+            else
             {
-                var registerParamKey = GenerateRegisterKey(kp.Field.FieldType, /*kp.InjectionAttribute.*/registerKey.Name);
-                var value = Resolve(registerParamKey);
-                kp.Field.SetValue(instance, value);
+                var parameters = new List<object>(constructorParameters.Length);
+                foreach (var parameterInfo in constructorParameters)
+                {
+                    var registerParamKey = GenerateRegisterKey(parameterInfo.ParameterType, registerKey.Name);
+                    parameters.Add(ResolveNewInstance(registerParamKey));
+                }
+                instance = constructor.Invoke(parameters.ToArray());
             }
-            ///////////////////// 
-            ///
+            // Dependencies By Injection. 
             return instance;
         }
 
@@ -150,10 +93,10 @@ namespace CodeCraft.DependencyInjection
         private object ResolveNewInstance(NamedInterfaces registerKey)
         {
 
-            var implementation = LazyImplementations[registerKey].ImplementationType;
             object instance = Instanciate(registerKey);
 
             ///////////////////////////////////// 
+            var implementation = LazyImplementations[registerKey].ImplementationType;
             var t = implementation.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
                 .Select(field => new
                 {
@@ -164,7 +107,7 @@ namespace CodeCraft.DependencyInjection
 
             foreach (var kp in t)
             {
-                var registerParamKey = GenerateRegisterKey(kp.Field.FieldType, /*kp.InjectionAttribute.*/registerKey.Name);
+                var registerParamKey = GenerateRegisterKey(kp.Field.FieldType, kp.InjectionAttribute.Name);
                 var value = Resolve(registerParamKey);
                 kp.Field.SetValue(instance, value);
             }
