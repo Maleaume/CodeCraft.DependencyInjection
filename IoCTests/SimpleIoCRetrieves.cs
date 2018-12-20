@@ -27,10 +27,11 @@ namespace IoCTests
 
         public class Main : IMain
         {
+            [FieldInjection]
             ITest Tester;
-            public Main(ITest tester)
+            public Main()
             {
-                Tester = tester;
+           
             }
             public override string ToString() => Tester.TestString();
         }

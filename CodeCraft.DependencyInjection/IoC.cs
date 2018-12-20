@@ -1,5 +1,6 @@
 ﻿using CodeCraft.Core.BaseArchitecture;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,7 +8,7 @@ using System.Reflection;
 namespace CodeCraft.DependencyInjection
 {
 
-    public class IoCDictionary : Dictionary<NamedInterfaces, (Type, Lazy<object>)>
+    public class IoCDictionary : ConcurrentDictionary<NamedInterfaces, (Type, Lazy<object>)>
     {
         public new(Type ImplementationType, Lazy<object> LazyInstance) this[NamedInterfaces key]
         {
@@ -107,20 +108,40 @@ namespace CodeCraft.DependencyInjection
             object instance;
             var implementation = LazyImplementations[registerKey].ImplementationType;
             var constructor = implementation.GetConstructors()[0];
-            ParameterInfo[] constructorParameters = constructor.GetParameters();
-            if (constructorParameters.Length == 0)
-                instance = Activator.CreateInstance(implementation);
-            else
-            {
-                var parameters = new List<object>(constructorParameters.Length);
-                foreach (var parameterInfo in constructorParameters)
+            var defaultConstructor = implementation.GetConstructor(Type.EmptyTypes);
+            instance =  Activator.CreateInstance(implementation);
+            /* ParameterInfo[] constructorParameters = constructor.GetParameters();
+             if (constructorParameters.Length == 0)
+                 instance = Activator.CreateInstance(implementation);
+             else
+             {
+                 var parameters = new List<object>(constructorParameters.Length);
+                 foreach (var parameterInfo in constructorParameters)
+                 {
+                     var registerParamKey = GenerateRegisterKey(parameterInfo.ParameterType, registerKey.Name);
+                     parameters.Add(ResolveNewInstance(registerParamKey));
+                 }
+                 instance = constructor.Invoke(parameters.ToArray());
+             }
+             // Dependencies By Injection. */
+
+            ///////////////////////////////////// 
+            var t = implementation.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
+                .Select(field => new
                 {
-                    var registerParamKey = GenerateRegisterKey(parameterInfo.ParameterType, registerKey.Name);
-                    parameters.Add(ResolveNewInstance(registerParamKey));
-                }
-                instance = constructor.Invoke(parameters.ToArray());
+                    Field = field,
+                    InjectionAttribute = field.GetCustomAttribute<FieldInjectionAttribute>()
+                })
+                .Where(x => x.InjectionAttribute != null);
+
+            foreach (var kp in t)
+            {
+                var registerParamKey = GenerateRegisterKey(kp.Field.FieldType, /*kp.InjectionAttribute.*/registerKey.Name);
+                var value = Resolve(registerParamKey);
+                kp.Field.SetValue(instance, value);
             }
-            // Dependencies By Injection. 
+            ///////////////////// 
+            ///
             return instance;
         }
 
@@ -143,7 +164,7 @@ namespace CodeCraft.DependencyInjection
 
             foreach (var kp in t)
             {
-                var registerParamKey = GenerateRegisterKey(kp.Field.FieldType, kp.InjectionAttribute.Name);
+                var registerParamKey = GenerateRegisterKey(kp.Field.FieldType, /*kp.InjectionAttribute.*/registerKey.Name);
                 var value = Resolve(registerParamKey);
                 kp.Field.SetValue(instance, value);
             }
