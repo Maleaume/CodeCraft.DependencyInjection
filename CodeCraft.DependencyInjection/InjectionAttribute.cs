@@ -9,7 +9,8 @@ namespace CodeCraft.DependencyInjection
 
         public FieldInjectionAttribute(string name = "")
             => Name = name;
+        
     }
 
-    public class SingletonInectionAttribute : Attribute { }
+    public class SingletonInjectionAttribute : Attribute { }
 }

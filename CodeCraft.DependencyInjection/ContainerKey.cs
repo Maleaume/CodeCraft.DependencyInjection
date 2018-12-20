@@ -2,7 +2,7 @@
 
 namespace CodeCraft.DependencyInjection
 {
-    public struct NamedInterfaces
+    public struct ContainerKey
     {
         /// <summary>
         /// is not use for HashCode.
@@ -13,7 +13,7 @@ namespace CodeCraft.DependencyInjection
 
         public override bool Equals(object obj)
         {
-            if (obj == null || !(obj is NamedInterfaces typedObj))
+            if (obj == null || !(obj is ContainerKey typedObj))
                 return false;
             return typedObj.InterfaceType.Equals(InterfaceType) && 
                    typedObj.Name.Equals(Name);
