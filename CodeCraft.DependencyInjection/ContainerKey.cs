@@ -3,11 +3,7 @@
 namespace CodeCraft.DependencyInjection
 {
     public struct ContainerKey
-    {
-        /// <summary>
-        /// is not use for HashCode.
-        /// </summary>
-        public Type ImplementationType { get; set; }
+    { 
         public Type InterfaceType { get; set; }
         public string Name { get; set; }
 

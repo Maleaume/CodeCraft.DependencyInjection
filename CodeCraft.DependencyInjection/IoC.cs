@@ -11,18 +11,13 @@ namespace CodeCraft.DependencyInjection
         private readonly IConsistencyValidator ConcistencyValidator = new ConsistencyValidator();
         private readonly IoCContainer LazyImplementations = new IoCContainer();
 
-        /* public bool IsRegister<Interface>() => IsRegister<Interface>("default");
 
-               public bool IsRegister<Interface>(string name)
-               {
-                   var registerKey = GenerateRegisterKey<Interface>(name);
-                   return IsRegister(registerKey);
-               }
+        public bool IsRegister<Interface>(string name = "default")
+        {
+            var registerKey = GenerateRegisterKey<Interface>(name);
+            return LazyImplementations.IsRegistered(registerKey);
+        }
 
-
-
-               private bool IsRegister(NamedInterfaces key)
-                   => Contracts.ContainsKey(key);*/
         private ContainerKey GenerateRegisterKey<Interface>(string name)
            => GenerateRegisterKey(typeof(Interface), name);
 
@@ -32,9 +27,7 @@ namespace CodeCraft.DependencyInjection
                 InterfaceType = interfaceType,
                 Name = name
             };
-
-   
-
+        
         public void RegisterType<Interface, Implementation>(string name = "default")
             where Interface : class
             where Implementation : class
@@ -83,7 +76,7 @@ namespace CodeCraft.DependencyInjection
             object instance = Instanciate(registerKey);
 
             ///////////////////////////////////// 
-            var implementation = LazyImplementations [registerKey].ImplementationType;
+            var implementation = LazyImplementations[registerKey].ImplementationType;
             var injectedFileds = GetInjectedFields(implementation);
 
             foreach (var kp in injectedFileds)
@@ -97,13 +90,13 @@ namespace CodeCraft.DependencyInjection
             return instance;
         }
 
-        public void RegisterInstance<Interface>(Interface implementation, string name)
+        public void RegisterInstance<Interface>(Interface implementation, string name = "default")
         {
             if (Equals(implementation, default(Interface))) throw new ArgumentNullException("implementation", "Implementation cannot be null");
             var registerKey = GenerateRegisterKey<Interface>(name);
             LazyImplementations[registerKey] = (implementation.GetType(), new Lazy<object>(() => implementation));
         }
-        
+
         private IEnumerable<InjectedFieldInfo> GetInjectedFields(Type implementation)
             => implementation
                 .GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)

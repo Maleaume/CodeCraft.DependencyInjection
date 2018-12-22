@@ -45,7 +45,7 @@ namespace CodeCraft.DependencyInjection
 
         private void DisposableRemove(ContainerKey key)
         {
-            (_, var oldLazyInstance) = this[key];
+            (_, var oldLazyInstance) = container[key];
             if (oldLazyInstance.IsValueCreated && oldLazyInstance.Value is IDisposable objDisposable)
                 objDisposable.Dispose();
         }
