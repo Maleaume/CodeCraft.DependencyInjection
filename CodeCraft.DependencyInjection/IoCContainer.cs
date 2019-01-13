@@ -13,6 +13,9 @@ namespace CodeCraft.DependencyInjection
     {
         private readonly IoCDictionary container = new IoCDictionary();
 
+        public bool IsRegistered(ContainerKey key, string name = "default")
+            => container.ContainsKey(key);
+
         /// <summary>
         /// Use [] operator to simplify code writting, and wrapped those of <see cref="container"/> dictionary.
         /// </summary>
@@ -30,7 +33,6 @@ namespace CodeCraft.DependencyInjection
         /// </exception>
         public (Type ImplementationType, Lazy<object> LazyInstance) this[ContainerKey key]
         {
-           
             get { return container[key]; }
             set
             {
@@ -38,10 +40,7 @@ namespace CodeCraft.DependencyInjection
                     DisposableRemove(key);
                 container[key] = value;
             }
-        }
-
-        public bool IsRegistered(ContainerKey key, string name = "default")
-            => container.ContainsKey(key);
+        } 
 
         private void DisposableRemove(ContainerKey key)
         {

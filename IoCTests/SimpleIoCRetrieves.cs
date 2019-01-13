@@ -27,7 +27,7 @@ namespace IoCTests
 
         public class Main : IMain
         {
-            [FieldInjection]
+            [Injection("A")]
             ITest Tester;
             public Main()
             {
@@ -104,7 +104,7 @@ namespace IoCTests
             Assert.AreEqual("ATest Instances", aMain.ToString());
             var bMain = container.Resolve<IMain>("B");
             Assert.IsNotNull(bMain);
-            Assert.AreEqual("BTest Instances", bMain.ToString());
+            Assert.AreEqual("ATest Instances", bMain.ToString());
         }
 
 

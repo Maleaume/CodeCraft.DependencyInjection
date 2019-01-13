@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CodeCraft.DependencyInjection
+namespace CodeCraft.DependencyInjection.Validator
 {
     class ConsistencyValidator : IConsistencyValidator
     {

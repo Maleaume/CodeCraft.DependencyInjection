@@ -1,4 +1,4 @@
-﻿namespace CodeCraft.DependencyInjection
+﻿namespace CodeCraft.DependencyInjection.Validator
 {
     interface IConsistencyValidator
     {

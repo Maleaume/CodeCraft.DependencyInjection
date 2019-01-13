@@ -2,15 +2,22 @@
 
 namespace CodeCraft.DependencyInjection
 {
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
-    public class FieldInjectionAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+    public class InjectionAttribute : Attribute
     {
+       
         public string Name { get; }
-
-        public FieldInjectionAttribute(string name = "")
-            => Name = name;
-        
+        public InjectionType InjectionType { get; }
+        public InjectionAttribute( string name = "", InjectionType injectionType = InjectionType.NewInstance)
+        {
+            Name = name;
+            InjectionType = injectionType;    
+        }
     }
-
-    public class SingletonInjectionAttribute : Attribute { }
+    
+    public enum InjectionType
+    {
+        NewInstance,
+        Singleton
+    }
 }

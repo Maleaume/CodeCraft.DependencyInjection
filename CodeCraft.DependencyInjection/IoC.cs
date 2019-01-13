@@ -1,16 +1,17 @@
 ﻿using CodeCraft.Core.BaseArchitecture;
+using CodeCraft.DependencyInjection.Relfection;
+using CodeCraft.DependencyInjection.Validator;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace CodeCraft.DependencyInjection
 {
-    public class IoC : Singleton<IoC>
+    public partial class IoC : Singleton<IoC>
     {
         private readonly IConsistencyValidator ConcistencyValidator = new ConsistencyValidator();
         private readonly IoCContainer LazyImplementations = new IoCContainer();
-
+        private readonly IInjectedMemberService InjectedMemberService = new InjectedMembersService();
 
         public bool IsRegister<Interface>(string name = "default")
         {
@@ -27,7 +28,7 @@ namespace CodeCraft.DependencyInjection
                 InterfaceType = interfaceType,
                 Name = name
             };
-        
+
         public void RegisterType<Interface, Implementation>(string name = "default")
             where Interface : class
             where Implementation : class
@@ -68,26 +69,45 @@ namespace CodeCraft.DependencyInjection
             // Dependencies By Injection. 
             return instance;
         }
+        public object Resolve(InjectionType injectionType, ContainerKey key)
+        {
+            switch (injectionType)
+            {
+                case InjectionType.Singleton: return Resolve(key);
+                case InjectionType.NewInstance: return ResolveNewInstance(key);
+                default: throw new ArgumentException();
+            }
+        }
 
         public T ResolveNewInstance<T>(string name = "default") => (T)ResolveNewInstance(GenerateRegisterKey<T>(name));
 
         private object ResolveNewInstance(ContainerKey registerKey)
         {
             object instance = Instanciate(registerKey);
-
-            ///////////////////////////////////// 
             var implementation = LazyImplementations[registerKey].ImplementationType;
-            var injectedFileds = GetInjectedFields(implementation);
+            SetInjectedFields(instance, implementation);
+            SetInjectedProperties(instance, implementation); 
+            return instance;  
+        }
 
-            foreach (var kp in injectedFileds)
-
+        void SetInjectedFields(object instance, Type implementation)
+        {
+            foreach (var kp in InjectedMemberService.GetInjectedFields(implementation))
             {
-                var registerParamKey = GenerateRegisterKey(kp.FieldInfo.FieldType, registerKey.Name);
-                var value = Resolve(registerParamKey);
-                kp.FieldInfo.SetValue(instance, value);
+                var registerParamKey = GenerateRegisterKey(kp.MembersInfos.FieldType, kp.InjectionAttribute.Name);
+                var value = Resolve(kp.InjectionAttribute.InjectionType, registerParamKey);
+                kp.MembersInfos.SetValue(instance, value);
             }
-            ///////////////////// 
-            return instance;
+        }
+
+        void SetInjectedProperties(object instance, Type implementation)
+        {
+            foreach (var kp in InjectedMemberService.GetInjectedProperties(implementation))
+            {
+                var registerParamKey = GenerateRegisterKey(kp.MembersInfos.PropertyType, kp.InjectionAttribute.Name);
+                var value = Resolve(kp.InjectionAttribute.InjectionType, registerParamKey);
+                kp.MembersInfos.SetValue(instance, value);
+            }
         }
 
         public void RegisterInstance<Interface>(Interface implementation, string name = "default")
@@ -96,23 +116,5 @@ namespace CodeCraft.DependencyInjection
             var registerKey = GenerateRegisterKey<Interface>(name);
             LazyImplementations[registerKey] = (implementation.GetType(), new Lazy<object>(() => implementation));
         }
-
-        private IEnumerable<InjectedFieldInfo> GetInjectedFields(Type implementation)
-            => implementation
-                .GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
-                .Select(field => new InjectedFieldInfo
-                {
-                    FieldInfo = field,
-                    InjectionAttribute = field.GetCustomAttribute<FieldInjectionAttribute>()
-                })
-                .Where(x => x.InjectionAttribute != null);
-
-
-        class InjectedFieldInfo
-        {
-            public FieldInfo FieldInfo { get; set; }
-            public FieldInjectionAttribute InjectionAttribute { get; set; }
-        }
-
     }
 }
