@@ -27,8 +27,8 @@ namespace IoCTests
 
         public class Main : IMain
         {
-            [Injection("A")]
-            ITest Tester;
+            [Injection("A", InjectionType.NewInstance)]
+            private readonly ITest Tester;
             public Main()
             {
            
@@ -107,6 +107,17 @@ namespace IoCTests
             Assert.AreEqual("ATest Instances", bMain.ToString());
         }
 
+
+        [TestMethod]
+        public void ResolveImplementation()
+        {
+            var container = IoC.Instance;
+            container.RegisterType<ITest, ATest>("A");
+            container.RegisterType<ITest, BTest>("B");
+
+            var mainImpl = IoC.Instance.Resolve<Main>();
+            Assert.AreEqual("ATest Instances", mainImpl.ToString());
+        }
 
         public  class Unit<T> : IUnit<T>
         {

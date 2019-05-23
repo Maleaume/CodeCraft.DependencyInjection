@@ -7,10 +7,11 @@
     <Company>CodeCraft</Company>
     <Description>Inversion of Controls
 Dependencies Injection</Description>
-    <Version>1.2.0.0</Version>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <FileVersion>1.2.0.0</FileVersion>
-    <PackageReleaseNotes>Add RegisterType and Resolve without name.</PackageReleaseNotes>
+    <Version>1.2.1.0</Version>
+    <AssemblyVersion>1.2.1.0</AssemblyVersion>
+    <FileVersion>1.2.1.0</FileVersion>
+    <PackageReleaseNotes>Add RegisterType and Resolve without name.
+Resolve an implementation and Inject  fields&amp; properties</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 

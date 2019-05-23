@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace CodeCraft.DependencyInjection
 {
-    public partial class IoC : Singleton<IoC>
+    public class IoC : Singleton<IoC>
     {
         private readonly IConsistencyValidator ConcistencyValidator = new ConsistencyValidator();
         private readonly IoCContainer LazyImplementations = new IoCContainer();
@@ -42,7 +42,14 @@ namespace CodeCraft.DependencyInjection
         private Lazy<object> CreateLazyInstance<Interface>(string name)
             => new Lazy<object>(() => ResolveNewInstance<Interface>(name));
 
-        public T Resolve<T>(string name = "default") => (T)Resolve(GenerateRegisterKey<T>(name));
+        public T Resolve<T>(string name = "default")
+        {
+            if (typeof(T).IsInterface)
+                return (T)Resolve(GenerateRegisterKey<T>(name));
+            else
+                return (T)Instanciate(typeof(T));
+
+        }
 
         private object Resolve(ContainerKey registerKey) => LazyImplementations[registerKey].LazyInstance.Value;
 
@@ -50,25 +57,33 @@ namespace CodeCraft.DependencyInjection
 
         private object Instanciate(ContainerKey registerKey)
         {
-            object instance;
             var implementation = LazyImplementations[registerKey].ImplementationType;
-            var constructor = implementation.GetConstructors()[0];
-            ParameterInfo[] constructorParameters = constructor.GetParameters();
-            if (constructorParameters.Length == 0)
+            return Instanciate(implementation);
+        }
+
+        private object Instanciate(Type implementation )
+        { 
+            object instance;
+           // var constructor = implementation.GetConstructors()[0];
+          //  ParameterInfo[] constructorParameters = constructor.GetParameters();
+           // if (constructorParameters.Length == 0)
                 instance = Activator.CreateInstance(implementation);
-            else
-            {
-                var parameters = new List<object>(constructorParameters.Length);
-                foreach (var parameterInfo in constructorParameters)
-                {
-                    var registerParamKey = GenerateRegisterKey(parameterInfo.ParameterType, registerKey.Name);
-                    parameters.Add(ResolveNewInstance(registerParamKey));
-                }
-                instance = constructor.Invoke(parameters.ToArray());
-            }
-            // Dependencies By Injection. 
+            /* else
+             {
+                 var parameters = new List<object>(constructorParameters.Length);
+                 foreach (var parameterInfo in constructorParameters)
+                 {
+                     var registerParamKey = GenerateRegisterKey(parameterInfo.ParameterType, registerKey.Name);
+                     parameters.Add(ResolveNewInstance(registerParamKey));
+                 }
+                 instance = constructor.Invoke(parameters.ToArray());
+             }*/
+            // Dependencies By Injection.
+            SetInjectedFields(instance, implementation);
+            SetInjectedProperties(instance, implementation);
             return instance;
         }
+
         public object Resolve(InjectionType injectionType, ContainerKey key)
         {
             switch (injectionType)
