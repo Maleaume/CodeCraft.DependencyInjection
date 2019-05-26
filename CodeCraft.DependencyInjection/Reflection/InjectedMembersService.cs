@@ -7,6 +7,8 @@ namespace CodeCraft.DependencyInjection.Relfection
 {
     class InjectedMembersService : IInjectedMemberService
     {
+        private readonly BindingFlags researchFlags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+
         private delegate MemberInfo[] GetMembers(Type implementation);
 
         public IEnumerable<InjectedFieldInfo> GetInjectedFields(Type implementation)
@@ -16,10 +18,14 @@ namespace CodeCraft.DependencyInjection.Relfection
             => GetInjectedMembers<InjectedPropertiesInfo, PropertyInfo>(implementation, GetProperties);
 
         private MemberInfo[] GetProperties(Type implementation)
-            => implementation.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-
+        { if (typeof(object) == implementation) return new PropertyInfo[] { };
+            return implementation.GetProperties(researchFlags).Concat(GetProperties(implementation.BaseType)).ToArray();
+        }
         private MemberInfo[] GetFields(Type implementation)
-            => implementation.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+        {
+            if (typeof(object) == implementation) return new PropertyInfo[] { };
+            return implementation.GetFields(researchFlags).Concat(GetFields(implementation.BaseType)).ToArray();
+        }
 
         private IEnumerable<T> GetInjectedMembers<T, U>(Type implementation, GetMembers getMembersMethod) 
             where T : InjectedMemberInfo<U>, new() 

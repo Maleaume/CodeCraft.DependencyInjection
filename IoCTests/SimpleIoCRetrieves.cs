@@ -1,6 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CodeCraft.DependencyInjection;
 using System;
+using System.Reflection;
+using System.Linq;
 
 namespace IoCTests
 {
@@ -25,15 +27,20 @@ namespace IoCTests
             public string TestString() => "BTest Instances";
         }
 
-        public class Main : IMain
+        public class Main : AbstractMain,  IMain
         {
             [Injection("A", InjectionType.NewInstance)]
-            private readonly ITest Tester;
+            protected  readonly  ITest Tester ;
             public Main()
-            {
-           
+            { 
             }
             public override string ToString() => Tester.TestString();
+        }
+
+        public abstract class AbstractMain
+        {
+            [Injection("A", InjectionType.Singleton)]
+            protected ITest abstractATest;
         }
         public interface IMain
         { }
@@ -81,11 +88,27 @@ namespace IoCTests
             IoC.Instance.RegisterInstance<ITest>(null, "A");
         }
 
-
+        [TestMethod]
+        public void TestAbstract()
+        {
+            var container = IoC.Instance;
+ var t = GetFieldInfo(typeof(Main));
+            container.RegisterType<ITest, ATest>("A");
+            container.RegisterType<ITest, BTest>("B");
+            container.RegisterType<IMain, Main>("A");
+            container.RegisterType<IMain, Main>("B");
+          
+            var aMain = container.Resolve<IMain>("A");
+            Assert.IsNotNull(aMain);
+            Assert.AreEqual("ATest Instances", aMain.ToString());
+        
+        }
 
         [TestMethod]
         public void TestMethod1()
         {
+
+           
             var container = IoC.Instance;
 
             container.RegisterType<ITest, ATest>("A");
@@ -105,6 +128,17 @@ namespace IoCTests
             var bMain = container.Resolve<IMain>("B");
             Assert.IsNotNull(bMain);
             Assert.AreEqual("ATest Instances", bMain.ToString());
+
+
+
+        }
+
+        public FieldInfo[] GetFieldInfo(Type type)
+        {
+            if (type.Equals(typeof(object)))
+                return new FieldInfo[] { };
+            return type.GetFields(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Concat(GetFieldInfo(type.BaseType)).ToArray();
+
         }
 
 
