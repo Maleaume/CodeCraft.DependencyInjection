@@ -7,13 +7,14 @@
     <Company>CodeCraft</Company>
     <Description>Inversion of Controls
 Dependencies Injection</Description>
-    <Version>1.2.1.0</Version>
-    <AssemblyVersion>1.3.0.0</AssemblyVersion>
-    <FileVersion>1.2.1.0</FileVersion>
+    <Version>1.3.1.0</Version>
+    <AssemblyVersion>1.3.1.0</AssemblyVersion>
+    <FileVersion>1.3.1.0</FileVersion>
     <PackageReleaseNotes>Add RegisterType and Resolve without name.
 Resolve an implementation and Inject  fields&amp; properties
 Manage Abstract private member for injection</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

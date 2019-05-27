@@ -8,7 +8,7 @@ namespace CodeCraft.DependencyInjection
        
         public string Name { get; }
         public InjectionType InjectionType { get; }
-        public InjectionAttribute( string name = "", InjectionType injectionType = InjectionType.NewInstance)
+        public InjectionAttribute( string name = "default", InjectionType injectionType = InjectionType.NewInstance)
         {
             Name = name;
             InjectionType = injectionType;    
