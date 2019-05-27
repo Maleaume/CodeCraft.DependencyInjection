@@ -39,7 +39,7 @@ namespace IoCTests
 
         public abstract class AbstractMain
         {
-            [Injection(injectionType: InjectionType.NewInstance)]
+            [Injection(name :"A",injectionType: InjectionType.NewInstance)]
             protected ITest abstractATest;
         }
         public interface IMain
