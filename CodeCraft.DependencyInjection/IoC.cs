@@ -1,12 +1,11 @@
-﻿using CodeCraft.Core.BaseArchitecture;
-using CodeCraft.DependencyInjection.Relfection;
+﻿using CodeCraft.DependencyInjection.Relfection;
 using CodeCraft.DependencyInjection.Validator;
 using System;
-using System.Collections.Generic;
-using System.Reflection;
+using System.Collections.Generic; 
 
 namespace CodeCraft.DependencyInjection
 {
+     
     public class IoC : Singleton<IoC>
     {
         private readonly IConsistencyValidator ConcistencyValidator = new ConsistencyValidator();
@@ -57,8 +56,15 @@ namespace CodeCraft.DependencyInjection
 
         private object Instanciate(ContainerKey registerKey)
         {
-            var implementation = LazyImplementations[registerKey].ImplementationType;
-            return Instanciate(implementation);
+            try
+            {
+                var implementation = LazyImplementations[registerKey].ImplementationType;
+                return Instanciate(implementation);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                throw new IocException($"the key: {registerKey.InterfaceType.Name}(\"{registerKey.Name}\") does not exist in  container.", ex);
+            }
         }
 
         private object Instanciate(Type implementation )
