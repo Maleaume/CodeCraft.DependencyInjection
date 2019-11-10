@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-
+using System.Collections.Concurrent; 
 
 namespace CodeCraft.DependencyInjection
 {
-    using IoCDictionary = Dictionary<ContainerKey, (Type, Lazy<object>)>;
+    using IoCDictionary = ConcurrentDictionary<ContainerKey, (Type, Lazy<object>)>;
     /// <summary>
     /// Container dictionary used to store all instances.
     /// This class remove properly instance by using dispose method if class implements <see cref="IDisposable"/> interface
