@@ -10,12 +10,14 @@ Dependencies Injection</Description>
     <Version>2.0</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <PackageReleaseNotes>Add RegisterType and Resolve without name.
-Resolve an implementation and Inject  fields&amp; properties
-Manage Abstract private member for injection
-</PackageReleaseNotes>
+    <PackageReleaseNotes></PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <Platforms>x64;x86</Platforms>
+    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+    <PackageTags>IOC, Inversion of control, Injection, Dependency Injection</PackageTags>
+    <RepositoryUrl>https://github.com/Maleaume/CodeCraft.DependencyInjection</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Maleaume/CodeCraft.DependencyInjection</PackageProjectUrl>
+    <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -29,6 +31,13 @@ Manage Abstract private member for injection
 
   <ItemGroup>
     <PackageReference Update="NETStandard.Library" Version="2.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE.md">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
