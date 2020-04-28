@@ -1,11 +1,11 @@
 ﻿using CodeCraft.DependencyInjection.Relfection;
 using CodeCraft.DependencyInjection.Validator;
 using System;
-using System.Collections.Generic; 
+using System.Collections.Generic;
 
 namespace CodeCraft.DependencyInjection
 {
-     
+
     public class IoC : Singleton<IoC>
     {
         private readonly IConsistencyValidator ConcistencyValidator = new ConsistencyValidator();
@@ -67,13 +67,13 @@ namespace CodeCraft.DependencyInjection
             }
         }
 
-        private object Instanciate(Type implementation )
-        { 
+        private object Instanciate(Type implementation)
+        {
             object instance;
-           // var constructor = implementation.GetConstructors()[0];
-          //  ParameterInfo[] constructorParameters = constructor.GetParameters();
-           // if (constructorParameters.Length == 0)
-                instance = Activator.CreateInstance(implementation);
+            // var constructor = implementation.GetConstructors()[0];
+            //  ParameterInfo[] constructorParameters = constructor.GetParameters();
+            // if (constructorParameters.Length == 0)
+            instance = Activator.CreateInstance(implementation);
             /* else
              {
                  var parameters = new List<object>(constructorParameters.Length);
@@ -90,7 +90,7 @@ namespace CodeCraft.DependencyInjection
             return instance;
         }
 
-        public object Resolve(InjectionType injectionType, ContainerKey key)
+        private object Resolve(InjectionType injectionType, ContainerKey key)
         {
             switch (injectionType)
             {
@@ -100,6 +100,13 @@ namespace CodeCraft.DependencyInjection
             }
         }
 
+        public void ReplaceByNewInstance<T>(string name = "default") => ReplaceByNewInstance<T>(GenerateRegisterKey<T>(name));
+
+        private void ReplaceByNewInstance<T>(ContainerKey registerKey)
+        {
+            RegisterInstance((T)ResolveNewInstance(registerKey), registerKey);
+        }
+
         public T ResolveNewInstance<T>(string name = "default") => (T)ResolveNewInstance(GenerateRegisterKey<T>(name));
 
         private object ResolveNewInstance(ContainerKey registerKey)
@@ -107,8 +114,8 @@ namespace CodeCraft.DependencyInjection
             object instance = Instanciate(registerKey);
             var implementation = LazyImplementations[registerKey].ImplementationType;
             SetInjectedFields(instance, implementation);
-            SetInjectedProperties(instance, implementation); 
-            return instance;  
+            SetInjectedProperties(instance, implementation);
+            return instance;
         }
 
         void SetInjectedFields(object instance, Type implementation)
@@ -134,7 +141,11 @@ namespace CodeCraft.DependencyInjection
         public void RegisterInstance<Interface>(Interface implementation, string name = "default")
         {
             if (Equals(implementation, default(Interface))) throw new ArgumentNullException("implementation", "Implementation cannot be null");
-            var registerKey = GenerateRegisterKey<Interface>(name);
+            RegisterInstance(implementation, GenerateRegisterKey<Interface>(name)); 
+        }
+
+        public void RegisterInstance<Interface>(Interface implementation, ContainerKey registerKey)
+        { 
             LazyImplementations[registerKey] = (implementation.GetType(), new Lazy<object>(() => implementation));
         }
     }

@@ -27,19 +27,19 @@ namespace IoCTests
             public string TestString() => "BTest Instances";
         }
 
-        public class Main : AbstractMain,  IMain
+        public class Main : AbstractMain, IMain
         {
             [Injection("A", InjectionType.NewInstance)]
-            protected  readonly  ITest Tester ;
+            protected readonly ITest Tester;
             public Main()
-            { 
+            {
             }
             public override string ToString() => Tester.TestString();
         }
 
         public abstract class AbstractMain
         {
-            [Injection(name :"A",injectionType: InjectionType.NewInstance)]
+            [Injection(name: "A", injectionType: InjectionType.NewInstance)]
             protected ITest abstractATest;
         }
         public interface IMain
@@ -48,7 +48,7 @@ namespace IoCTests
         public void ResolveDifferentInstance()
         {
             var container = IoC.Instance;
-            container.RegisterType<ITest, ATest>("A"); 
+            container.RegisterType<ITest, ATest>("A");
             var A1 = container.ResolveNewInstance<ITest>("A");
             A1.Counter++;
             var A2 = container.ResolveNewInstance<ITest>("A");
@@ -60,7 +60,7 @@ namespace IoCTests
         public void ResolveSameInstance()
         {
             var container = IoC.Instance;
-            container.RegisterType<ITest, ATest>("A");  
+            container.RegisterType<ITest, ATest>("A");
             var A1 = container.Resolve<ITest>("A");
             A1.Counter++;
             var A2 = container.Resolve<ITest>("A");
@@ -77,7 +77,7 @@ namespace IoCTests
             A.Counter++;
 
             var A1 = IoC.Instance.Resolve<ITest>("A");
-            Assert.AreSame(A1, A); 
+            Assert.AreSame(A1, A);
         }
 
         [TestMethod]
@@ -92,23 +92,21 @@ namespace IoCTests
         public void TestAbstract()
         {
             var container = IoC.Instance;
- var t = GetFieldInfo(typeof(Main));
+            var t = GetFieldInfo(typeof(Main));
             container.RegisterType<ITest, ATest>("A");
             container.RegisterType<ITest, BTest>("B");
             container.RegisterType<IMain, Main>("A");
             container.RegisterType<IMain, Main>("B");
-          
+
             var aMain = container.Resolve<IMain>("A");
             Assert.IsNotNull(aMain);
             Assert.AreEqual("ATest Instances", aMain.ToString());
-        
+
         }
 
         [TestMethod]
         public void TestMethod1()
-        {
-
-           
+        { 
             var container = IoC.Instance;
 
             container.RegisterType<ITest, ATest>("A");
@@ -127,9 +125,7 @@ namespace IoCTests
             Assert.AreEqual("ATest Instances", aMain.ToString());
             var bMain = container.Resolve<IMain>("B");
             Assert.IsNotNull(bMain);
-            Assert.AreEqual("ATest Instances", bMain.ToString());
-
-
+            Assert.AreEqual("ATest Instances", bMain.ToString()); 
 
         }
 
@@ -153,7 +149,20 @@ namespace IoCTests
             Assert.AreEqual("ATest Instances", mainImpl.ToString());
         }
 
-        public  class Unit<T> : IUnit<T>
+
+
+        [TestMethod]
+        public void ReplaceByNewInstanceTest()
+        {
+            var container = IoC.Instance;
+            container.RegisterType<ITest, ATest>("A");
+            var firstVersion = container.Resolve<ITest>("A");
+            container.ReplaceByNewInstance<ITest>("A");
+            var secondVersion = container.Resolve<ITest>("A");
+            Assert.AreNotSame(firstVersion, secondVersion);
+        }
+
+        public class Unit<T> : IUnit<T>
         {
             public override string ToString() => typeof(T).ToString();
         }
@@ -183,7 +192,7 @@ namespace IoCTests
             var dUnit = container.Resolve<IUnit<ATest>>("A");
             Assert.IsNotNull(dUnit);
 
-            Assert.AreEqual("Dunit",  dUnit.ToString());
+            Assert.AreEqual("Dunit", dUnit.ToString());
         }
     }
 }
