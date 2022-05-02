@@ -1,11 +1,11 @@
-﻿using CodeCraft.DependencyInjection.Relfection;
-using CodeCraft.DependencyInjection.Validator;
-using System;
+﻿using System;
 using System.Collections.Generic;
+
+using CodeCraft.DependencyInjection.Relfection;
+using CodeCraft.DependencyInjection.Validator;
 
 namespace CodeCraft.DependencyInjection
 {
-
     public class IoC : Singleton<IoC>
     {
         private readonly IConsistencyValidator ConcistencyValidator = new ConsistencyValidator();
@@ -141,12 +141,22 @@ namespace CodeCraft.DependencyInjection
         public void RegisterInstance<Interface>(Interface implementation, string name = "default")
         {
             if (Equals(implementation, default(Interface))) throw new ArgumentNullException("implementation", "Implementation cannot be null");
-            RegisterInstance(implementation, GenerateRegisterKey<Interface>(name)); 
+            RegisterInstance(implementation, GenerateRegisterKey<Interface>(name));
         }
 
-        public void RegisterInstance<Interface>(Interface implementation, ContainerKey registerKey)
-        { 
+        private void RegisterInstance<Interface>(Interface implementation, ContainerKey registerKey)
+        {
             LazyImplementations[registerKey] = (implementation.GetType(), new Lazy<object>(() => implementation));
+        }
+
+        public void RemoveInstance<Interface>(string name = "default")
+        {
+            RemoveInstance(GenerateRegisterKey<Interface>(name));
+        }
+
+        private void RemoveInstance(ContainerKey registerKey)
+        {
+            LazyImplementations.Remove(registerKey);
         }
     }
 }

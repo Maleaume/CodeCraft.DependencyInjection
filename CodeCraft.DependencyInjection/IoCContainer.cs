@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Concurrent; 
+using System.Collections.Concurrent;
 
 namespace CodeCraft.DependencyInjection
 {
-    using IoCDictionary = ConcurrentDictionary<ContainerKey, (Type, Lazy<object>)>;
+    using IoCDictionary = ConcurrentDictionary<ContainerKey, (Type type, Lazy<object> lazyObject)>;
     /// <summary>
     /// Container dictionary used to store all instances.
     /// This class remove properly instance by using dispose method if class implements <see cref="IDisposable"/> interface
@@ -12,7 +12,7 @@ namespace CodeCraft.DependencyInjection
     {
         private readonly IoCDictionary container = new IoCDictionary();
 
-        public bool IsRegistered(ContainerKey key, string name = "default")
+        public bool IsRegistered(ContainerKey key)
             => container.ContainsKey(key);
 
         /// <summary>
@@ -39,7 +39,8 @@ namespace CodeCraft.DependencyInjection
                     DisposableRemove(key);
                 container[key] = value;
             }
-        } 
+        }
+
 
         private void DisposableRemove(ContainerKey key)
         {
@@ -47,6 +48,14 @@ namespace CodeCraft.DependencyInjection
             if (oldLazyInstance.IsValueCreated && oldLazyInstance.Value is IDisposable objDisposable)
                 objDisposable.Dispose();
         }
+
+        public void Remove(ContainerKey key)
+        {
+            if (container.TryRemove(key, out var containerItem))
+            {
+                if (containerItem.lazyObject.IsValueCreated && containerItem.lazyObject.Value is IDisposable objDisposable)
+                    objDisposable.Dispose();
+            }
+        }
     }
 }
- 

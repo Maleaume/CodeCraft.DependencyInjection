@@ -1,8 +1,10 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using CodeCraft.DependencyInjection;
-using System;
-using System.Reflection;
+﻿using System;
 using System.Linq;
+using System.Reflection;
+
+using CodeCraft.DependencyInjection;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IoCTests
 {
@@ -78,6 +80,13 @@ namespace IoCTests
 
             var A1 = IoC.Instance.Resolve<ITest>("A");
             Assert.AreSame(A1, A);
+
+            Assert.IsTrue(IoC.Instance.IsRegister<ITest>("A"));
+
+            IoC.Instance.RemoveInstance<ITest>("A");
+
+            Assert.IsFalse(IoC.Instance.IsRegister<ITest>("A"));
+
         }
 
         [TestMethod]
@@ -106,7 +115,7 @@ namespace IoCTests
 
         [TestMethod]
         public void TestMethod1()
-        { 
+        {
             var container = IoC.Instance;
 
             container.RegisterType<ITest, ATest>("A");
@@ -125,7 +134,7 @@ namespace IoCTests
             Assert.AreEqual("ATest Instances", aMain.ToString());
             var bMain = container.Resolve<IMain>("B");
             Assert.IsNotNull(bMain);
-            Assert.AreEqual("ATest Instances", bMain.ToString()); 
+            Assert.AreEqual("ATest Instances", bMain.ToString());
 
         }
 
