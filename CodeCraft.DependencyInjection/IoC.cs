@@ -42,13 +42,8 @@ namespace CodeCraft.DependencyInjection
             => new Lazy<object>(() => ResolveNewInstance<Interface>(name));
 
         public T Resolve<T>(string name = "default")
-        {
-            if (typeof(T).IsInterface)
-                return (T)Resolve(GenerateRegisterKey<T>(name));
-            else
-                return (T)Instanciate(typeof(T));
+            => typeof(T).IsInterface ? (T)Resolve(GenerateRegisterKey<T>(name)) : (T)Instanciate(typeof(T));
 
-        }
 
         private object Resolve(ContainerKey registerKey) => LazyImplementations[registerKey].LazyInstance.Value;
 

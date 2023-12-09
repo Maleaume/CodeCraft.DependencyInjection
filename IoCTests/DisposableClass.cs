@@ -76,6 +76,13 @@ namespace IoCTests
             t.Dispose();
         }
 
+        [TestMethod]
+        [ExpectedException(typeof(IocException))]
+        public void ExceptionWithUnknownIntefaceOrKey()
+        {
+            IoC.Instance.RegisterType<IMyDisposable, MyDisposableA>();
+            var t = IoC.Instance.Resolve<IMyDisposable>("Test");
+        }
 
     }
 }

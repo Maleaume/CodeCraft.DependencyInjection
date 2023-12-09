@@ -32,7 +32,12 @@ namespace CodeCraft.DependencyInjection
         /// </exception>
         public (Type ImplementationType, Lazy<object> LazyInstance) this[ContainerKey key]
         {
-            get { return container[key]; }
+            get
+            {
+                return container.ContainsKey(key)
+                    ? ((Type ImplementationType, Lazy<object> LazyInstance))container[key]
+                    : throw new IocException($"IoC does not contains implementation definition for {key.InterfaceType.FullName} interface with associated key: '{key.Name}'");
+            }
             set
             {
                 if (container.ContainsKey(key))
