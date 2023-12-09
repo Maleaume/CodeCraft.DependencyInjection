@@ -18,6 +18,7 @@ Dependencies Injection</Description>
     <RepositoryUrl>https://github.com/Maleaume/CodeCraft.DependencyInjection</RepositoryUrl>
     <PackageProjectUrl>https://github.com/Maleaume/CodeCraft.DependencyInjection</PackageProjectUrl>
     <NeutralLanguage>en</NeutralLanguage>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -37,6 +38,10 @@ Dependencies Injection</Description>
     <None Include="..\LICENSE.md">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
 
